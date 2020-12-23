@@ -3,11 +3,17 @@ const canvas = document.querySelector("canvas");
 canvas.height = innerHeight;
 canvas.width = innerWidth;
 const brush = canvas.getContext("2d");
-const radius = 150;
+const radius = 180;
+// const colors = {
+//   green: "#00916e",
+//   yellow: "#FFCF00",
+//   red: "#fa003f",
+// };
+
 const colors = {
-  green: "#00916e",
-  yellow: "#FFCF00",
-  red: "#fa003f",
+  green: "rgba(255,255,255, 0.5)",
+  yellow: "rgba(255,207,0, 0.5)",
+  red: "rgba(156, 13, 56, 0.8)",
 };
 
 // Audio
@@ -34,7 +40,7 @@ const songs = [
 const audioElement = document.querySelector("audio");
 const audioContext = new AudioContext();
 const analyser = audioContext.createAnalyser();
-analyser.fftSize = 256;
+analyser.fftSize = 512;
 const source = audioContext.createMediaElementSource(audioElement);
 source.connect(analyser);
 //this connects our music back to the default output, such as your //speakers
@@ -69,10 +75,12 @@ const selectSong = () => {
       audioElement.src.indexOf("/", 7) + 1
     );
     if (i >= songs.length - 1) {
+      console.log("ding");
       audioElement.src = songs[0].src;
       playSong(songs[0].enum);
       return false;
     } else if (song.src === currentSrc) {
+      console.log("ding2");
       const arrIndex = +i + 1;
       const next = songs[arrIndex];
       playSong(next.enum);
@@ -94,21 +102,29 @@ let data = new Uint8Array(analyser.frequencyBinCount);
 
 const draw = (data) => {
   data = [...data];
-  const space = canvas.width / data.length;
+  const space = canvas.width / 2 / data.length;
 
   data.forEach((val, i) => {
-    if (i % 2 === 0) {
-      const x = radius * Math.cos(degrees_to_radians(i * 6));
-      const y = radius * Math.sin(degrees_to_radians(i * 6));
-      drawCircle(x + innerWidth / 2, y + innerHeight / 2, 1, val, i * 6, brush);
+    if (i % 1 === 0) {
+      multiplier = 3;
+      const x = radius * Math.cos(degrees_to_radians(i * multiplier));
+      const y = radius * Math.sin(degrees_to_radians(i * multiplier));
+      drawCircle(
+        x + innerWidth / 2,
+        y + innerHeight / 2,
+        2,
+        val / 1.3 > 175 ? 175 : val / 1.3,
+        i * multiplier,
+        brush
+      );
     }
     // * Circles
-    if (i % 1 === 0) {
+    if (i % 3 === 0) {
       for (let index = 0; index < val; index++) {
         if (index % 7 === 0) {
           brush.beginPath();
           brush.arc(space * i, canvas.height - index, 2, 0, Math.PI * 2);
-          if (index > 180) {
+          if (index > 190) {
             brush.fillStyle = colors.red;
           } else if (index > 120) {
             brush.fillStyle = colors.yellow;
@@ -127,18 +143,18 @@ const drawCircle = (x, y, w, h, deg, ctx) => {
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(degrees_to_radians(deg + 90));
-  if (h > 200) {
+  if (h > 170) {
     ctx.fillStyle = colors.red;
     ctx.shadowColor = colors.red;
-    ctx.shadowBlur = 2;
-  } else if (h > 130) {
+    ctx.shadowBlur = 20;
+  } else if (h > 80) {
     ctx.fillStyle = colors.yellow;
     ctx.shadowColor = colors.yellow;
-    ctx.shadowBlur = 2;
+    ctx.shadowBlur = 20;
   } else {
     ctx.fillStyle = colors.green;
     ctx.shadowColor = colors.green;
-    ctx.shadowBlur = 2;
+    ctx.shadowBlur = 20;
   }
   ctx.fillRect(-1 * (w / 2), -1 * (h / 2), w, h);
   ctx.restore();
@@ -181,8 +197,9 @@ const animate = () => {
     canvas.height = innerHeight;
   }
   requestAnimationFrame(animate);
-  brush.fillStyle = "rgba(20, 20, 20, 0.5)";
-  brush.fillRect(0, 0, canvas.width, canvas.height);
+  brush.clearRect(0, 0, canvas.width, canvas.height);
+  // brush.fillStyle = "rgba(20, 20, 20, 0.5)";
+  // brush.fillRect(0, 0, canvas.width, canvas.height);
   analyser.getByteFrequencyData(data);
   draw(data);
 };
