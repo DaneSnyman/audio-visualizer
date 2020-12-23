@@ -6,10 +6,14 @@
     <title>Document</title>
   </head>
   <body>
-    <div class="media-player">
-      <button onclick="playSong('fineday')">Fine day</button>
-      <button onclick="playSong('wamdue')">Wamdue</button>
-      <audio id="source" controls></audio>
+    <div class="media-controls">
+      <div class="track-list">
+        <div class="heading">Track List</div>
+        <ul class="tracks"></ul>
+      </div>
+      <div class="media-player">
+        <audio id="source" controls></audio>
+      </div>
     </div>
     <canvas id="audio_visual"></canvas>
 

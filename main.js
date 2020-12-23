@@ -4,6 +4,11 @@ canvas.height = innerHeight;
 canvas.width = innerWidth;
 const brush = canvas.getContext("2d");
 const radius = 150;
+const colors = {
+  green: "#00916e",
+  yellow: "#FFCF00",
+  red: "#fa003f",
+};
 
 // Audio
 const songs = [
@@ -29,104 +34,33 @@ const songs = [
 const audioElement = document.querySelector("audio");
 const audioContext = new AudioContext();
 const analyser = audioContext.createAnalyser();
-analyser.fftSize = 2048;
+analyser.fftSize = 256;
 const source = audioContext.createMediaElementSource(audioElement);
 source.connect(analyser);
 //this connects our music back to the default output, such as your //speakers
 source.connect(audioContext.destination);
 
+const checkElement = async (selector) => {
+  while (document.querySelector(selector) === null) {
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+  }
+  return document.querySelector(selector);
+};
+
 const playSong = (name) => {
-  songs.forEach((song) => {
-    if (song.enum === name) audioElement.src = song.src;
-  });
-
-  init();
-};
-
-let data = new Uint8Array(analyser.frequencyBinCount);
-
-const draw = (data) => {
-  data = [...data];
-  const space = canvas.width / data.length;
-
-  data.forEach((val, i) => {
-    if (i % 2 === 0) {
-      const x = radius * Math.cos(degrees_to_radians(i * 6));
-      const y = radius * Math.sin(degrees_to_radians(i * 6));
-      drawCircle(x + innerWidth / 2, y + innerHeight / 2, 1, val, i * 6, brush);
+  checkElement(`#${name}`).then((res) => {
+    const currentTrack = document.getElementById(name);
+    const activeTrack = document.getElementsByClassName("active");
+    while (activeTrack.length > 0) {
+      activeTrack[0].classList.remove("active");
     }
-    // * Circles
-    if (i % 5 === 0) {
-      for (let index = 0; index < val; index++) {
-        if (index % 7 === 0) {
-          brush.beginPath();
-          brush.arc(space * i, canvas.height - index, 2, 0, Math.PI * 2);
-          if (index > 180) {
-            brush.fillStyle = "red";
-          } else if (index > 120) {
-            brush.fillStyle = "yellow";
-          } else {
-            brush.fillStyle = "green";
-          }
-
-          brush.fill();
-        }
-      }
-    }
+    currentTrack.classList.add("active");
+    songs.forEach((song) => {
+      if (song.enum === name) audioElement.src = song.src;
+    });
+    audioElement.play();
+    init();
   });
-};
-
-function drawCircle(x, y, w, h, deg, ctx) {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.rotate(degrees_to_radians(deg + 90));
-  if (h > 200) {
-    ctx.fillStyle = "red";
-    ctx.shadowColor = "red";
-    ctx.shadowBlur = 2;
-  } else if (h > 130) {
-    ctx.fillStyle = "yellow";
-    ctx.shadowColor = "yellow";
-    ctx.shadowBlur = 2;
-  } else {
-    ctx.fillStyle = "green";
-    ctx.shadowColor = "green";
-    ctx.shadowBlur = 2;
-  }
-  ctx.fillRect(-1 * (w / 2), -1 * (h / 2), w, h);
-  ctx.restore();
-}
-function degrees_to_radians(degrees) {
-  return (degrees * Math.PI) / 180;
-}
-function radians_to_degrees(radians) {
-  return (radians * 180) / Math.PI;
-}
-
-const animate = () => {
-  if (canvas.width !== innerWidth || canvas.height !== innerHeight) {
-    canvas.width = innerWidth;
-    canvas.height = innerHeight;
-  }
-  requestAnimationFrame(animate);
-  brush.fillStyle = "rgba(20, 20, 20, 0.5)";
-  brush.fillRect(0, 0, canvas.width, canvas.height);
-  analyser.getByteFrequencyData(data);
-  draw(data);
-};
-
-const init = async () => {
-  if (!audioElement.src) {
-    audioElement.src = songs[0].src;
-  }
-  audioElement.play();
-  animate();
-};
-
-init();
-
-audioElement.onplay = () => {
-  audioContext.resume();
 };
 
 const selectSong = () => {
@@ -147,6 +81,118 @@ const selectSong = () => {
     return true;
   });
 };
+
 audioElement.onended = () => {
   selectSong();
 };
+
+audioElement.onplay = () => {
+  audioContext.resume();
+};
+
+let data = new Uint8Array(analyser.frequencyBinCount);
+
+const draw = (data) => {
+  data = [...data];
+  const space = canvas.width / data.length;
+
+  data.forEach((val, i) => {
+    if (i % 2 === 0) {
+      const x = radius * Math.cos(degrees_to_radians(i * 6));
+      const y = radius * Math.sin(degrees_to_radians(i * 6));
+      drawCircle(x + innerWidth / 2, y + innerHeight / 2, 1, val, i * 6, brush);
+    }
+    // * Circles
+    if (i % 1 === 0) {
+      for (let index = 0; index < val; index++) {
+        if (index % 7 === 0) {
+          brush.beginPath();
+          brush.arc(space * i, canvas.height - index, 2, 0, Math.PI * 2);
+          if (index > 180) {
+            brush.fillStyle = colors.red;
+          } else if (index > 120) {
+            brush.fillStyle = colors.yellow;
+          } else {
+            brush.fillStyle = colors.green;
+          }
+
+          brush.fill();
+        }
+      }
+    }
+  });
+};
+
+const drawCircle = (x, y, w, h, deg, ctx) => {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(degrees_to_radians(deg + 90));
+  if (h > 200) {
+    ctx.fillStyle = colors.red;
+    ctx.shadowColor = colors.red;
+    ctx.shadowBlur = 2;
+  } else if (h > 130) {
+    ctx.fillStyle = colors.yellow;
+    ctx.shadowColor = colors.yellow;
+    ctx.shadowBlur = 2;
+  } else {
+    ctx.fillStyle = colors.green;
+    ctx.shadowColor = colors.green;
+    ctx.shadowBlur = 2;
+  }
+  ctx.fillRect(-1 * (w / 2), -1 * (h / 2), w, h);
+  ctx.restore();
+};
+
+const degrees_to_radians = (degrees) => {
+  return (degrees * Math.PI) / 180;
+};
+
+const radians_to_degrees = (radians) => {
+  return (radians * 180) / Math.PI;
+};
+
+const buildTracks = () => {
+  const tracks = document.querySelector("ul");
+  songs.forEach((song) => {
+    var audio = new Audio();
+    audio.src = song.src;
+    audio.addEventListener("loadedmetadata", function () {
+      var s = parseInt(audio.duration % 60);
+      var m = parseInt((audio.duration / 60) % 60);
+      song.duration = `${m < 10 ? `0${m}` : m}:${s}`;
+
+      const li = document.createElement("li");
+      const durationDisplay = document.createElement("span");
+      durationDisplay.append(song.duration);
+      li.appendChild(document.createTextNode(song.title));
+      li.appendChild(durationDisplay);
+      li.setAttribute("id", song.enum);
+      li.setAttribute("onClick", `playSong('${song.enum}')`);
+      tracks.appendChild(li);
+      init();
+    });
+  });
+};
+
+const animate = () => {
+  if (canvas.width !== innerWidth || canvas.height !== innerHeight) {
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
+  }
+  requestAnimationFrame(animate);
+  brush.fillStyle = "rgba(20, 20, 20, 0.5)";
+  brush.fillRect(0, 0, canvas.width, canvas.height);
+  analyser.getByteFrequencyData(data);
+  draw(data);
+};
+
+const init = () => {
+  if (!audioElement.src) {
+    playSong(songs[0].enum);
+  }
+
+  animate();
+};
+
+buildTracks();

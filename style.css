@@ -4,10 +4,57 @@ body {
   padding: 0;
   overflow: hidden;
   background-color: #222;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.media-controls {
+  position: absolute;
+  right: 0;
+  width: 300px;
+  height: 100%;
+  /* background-color: slategray; */
+  padding: 10px 10px 0;
 }
 
 .media-player {
   position: absolute;
-  bottom: 0;
-  right: 0;
+  bottom: 10px;
+  /* right: 0; */
+}
+
+.track-list {
+  background-color: #12100e;
+  border: 1px solid #d4fcc3;
+}
+
+.track-list > .heading {
+  background-color: #d4fcc3;
+  color: #12100e;
+  padding: 10px;
+}
+
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+li {
+  color: #d4fcc3;
+  padding: 5px 10px;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+li:nth-child(odd) {
+  background: #171412;
+}
+
+li.active {
+  background-color: #f3c969;
+  color: #12100e;
+}
+
+li span {
+  float: right;
 }
