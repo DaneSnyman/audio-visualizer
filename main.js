@@ -3,7 +3,7 @@ const canvas = document.querySelector("canvas");
 canvas.height = innerHeight;
 canvas.width = innerWidth;
 const brush = canvas.getContext("2d");
-const radius = 180;
+const radius = 200;
 // const colors = {
 //   green: "#00916e",
 //   yellow: "#FFCF00",
@@ -15,6 +15,15 @@ const colors = {
   yellow: "rgba(255,207,0, 0.5)",
   red: "rgba(156, 13, 56, 0.8)",
 };
+
+const colorBars = {
+  lower: "#1E2F6A",
+  low: "#4370D6",
+  mid: "#67B6E6",
+  high: "#B6D3E1",
+};
+
+let selectedColor = colors.yellow;
 
 // Audio
 const songs = [
@@ -98,11 +107,22 @@ audioElement.onplay = () => {
   audioContext.resume();
 };
 
-let data = new Uint8Array(analyser.frequencyBinCount);
+const getAverage = (nums) => {
+  return nums.reduce((a, b) => a + b) / nums.length;
+};
 
+let data = new Uint8Array(analyser.frequencyBinCount);
 const draw = (data) => {
   data = [...data];
   const space = canvas.width / 2 / data.length;
+  const average = getAverage(data);
+  if (average < 40) {
+    selectedColor = colors.green;
+  } else if (average < 90) {
+    selectedColor = colors.yellow;
+  } else {
+    selectedColor = colors.red;
+  }
 
   data.forEach((val, i) => {
     if (i % 1 === 0) {
@@ -110,7 +130,7 @@ const draw = (data) => {
       const x = radius * Math.cos(degrees_to_radians(i * multiplier));
       const y = radius * Math.sin(degrees_to_radians(i * multiplier));
       drawCircle(
-        x + innerWidth / 2 + 35,
+        x + innerWidth / 2 + 33,
         y + innerHeight / 2,
         2,
         val / 1.3 > 175 ? 175 : val / 1.3,
@@ -121,17 +141,17 @@ const draw = (data) => {
     // * Circles
     if (i % 3 === 0) {
       for (let index = 0; index < val; index++) {
-        if (index % 10 === 0) {
+        if (index % 8 === 0) {
           const x = space * i + 20;
           const y = canvas.height - index - 20;
           brush.beginPath();
-          brush.arc(x, y, 2, 0, Math.PI * 2);
+          brush.arc(x, y, 1, 0, Math.PI * 2);
           if (index > 190) {
-            brush.fillStyle = colors.red;
-          } else if (index > 120) {
-            brush.fillStyle = colors.yellow;
+            brush.fillStyle = colorBars.high;
+          } else if (index > 90) {
+            brush.fillStyle = colorBars.mid;
           } else {
-            brush.fillStyle = colors.green;
+            brush.fillStyle = colorBars.low;
           }
 
           brush.fill();
@@ -145,19 +165,22 @@ const drawCircle = (x, y, w, h, deg, ctx) => {
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(degrees_to_radians(deg + 90));
-  if (h > 170) {
-    ctx.fillStyle = colors.red;
-    ctx.shadowColor = colors.red;
-    ctx.shadowBlur = 20;
-  } else if (h > 80) {
-    ctx.fillStyle = colors.yellow;
-    ctx.shadowColor = colors.yellow;
-    ctx.shadowBlur = 20;
-  } else {
-    ctx.fillStyle = colors.green;
-    ctx.shadowColor = colors.green;
-    ctx.shadowBlur = 20;
-  }
+  // if (h > 170) {
+  //   ctx.fillStyle = colors.red;
+  //   ctx.shadowColor = colors.red;
+  //   ctx.shadowBlur = 20;
+  // } else if (h > 80) {
+  //   ctx.fillStyle = colors.yellow;
+  //   ctx.shadowColor = colors.yellow;
+  //   ctx.shadowBlur = 20;
+  // } else {
+  //   ctx.fillStyle = colors.green;
+  //   ctx.shadowColor = colors.green;
+  //   ctx.shadowBlur = 20;
+  // }
+  ctx.fillStyle = selectedColor;
+  ctx.shadowColor = selectedColor;
+  ctx.shadowBlur = 20;
   ctx.fillRect(-1 * (w / 2), -1 * (h / 2), w, h);
   ctx.restore();
 };
