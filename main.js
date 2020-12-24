@@ -110,18 +110,22 @@ audioElement.onplay = () => {
 const getAverage = (nums) => {
   return nums.reduce((a, b) => a + b) / nums.length;
 };
-
+let count = 0;
 let data = new Uint8Array(analyser.frequencyBinCount);
 const draw = (data) => {
+  count++;
   data = [...data];
   const space = canvas.width / 2 / data.length;
-  const average = getAverage(data);
-  if (average < 40) {
-    selectedColor = colors.green;
-  } else if (average < 90) {
-    selectedColor = colors.yellow;
-  } else {
-    selectedColor = colors.red;
+
+  if (count % 50) {
+    const average = getAverage(data);
+    if (average < 40) {
+      selectedColor = colors.green;
+    } else if (average < 90) {
+      selectedColor = colors.yellow;
+    } else {
+      selectedColor = colors.red;
+    }
   }
 
   data.forEach((val, i) => {
