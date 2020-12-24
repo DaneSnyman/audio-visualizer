@@ -110,7 +110,7 @@ const draw = (data) => {
       const x = radius * Math.cos(degrees_to_radians(i * multiplier));
       const y = radius * Math.sin(degrees_to_radians(i * multiplier));
       drawCircle(
-        x + innerWidth / 2,
+        x + innerWidth / 2 + 35,
         y + innerHeight / 2,
         2,
         val / 1.3 > 175 ? 175 : val / 1.3,
@@ -121,9 +121,11 @@ const draw = (data) => {
     // * Circles
     if (i % 3 === 0) {
       for (let index = 0; index < val; index++) {
-        if (index % 7 === 0) {
+        if (index % 10 === 0) {
+          const x = space * i + 20;
+          const y = canvas.height - index - 20;
           brush.beginPath();
-          brush.arc(space * i, canvas.height - index, 2, 0, Math.PI * 2);
+          brush.arc(x, y, 2, 0, Math.PI * 2);
           if (index > 190) {
             brush.fillStyle = colors.red;
           } else if (index > 120) {

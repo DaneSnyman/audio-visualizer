@@ -11,7 +11,7 @@ canvas {
   background-image: url("assets/eye.jpg");
   background-position: center;
   background-size: cover;
-  background-position-x: -152px;
+  /* background-position-x: -152px; */
 }
 
 .media-controls {
