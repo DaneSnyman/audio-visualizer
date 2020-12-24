@@ -3,7 +3,7 @@ const canvas = document.querySelector("canvas");
 canvas.height = innerHeight;
 canvas.width = innerWidth;
 const brush = canvas.getContext("2d");
-const radius = 190;
+const radius = 186;
 // const colors = {
 //   green: "#00916e",
 //   yellow: "#FFCF00",
@@ -127,15 +127,15 @@ const draw = (data) => {
   }
 
   data.forEach((val, i) => {
-    if (i % 1 === 0) {
-      multiplier = 3;
+    if (i % 1 === 0 && i > 20) {
+      multiplier = 4;
       const x = radius * Math.cos(degrees_to_radians(i * multiplier));
       const y = radius * Math.sin(degrees_to_radians(i * multiplier));
       drawCircle(
         x + innerWidth / 2 + 30,
         y + innerHeight / 2 + 5,
         2,
-        val / 1.3 > 175 ? 175 : val / 1.3,
+        val / 1.5 > 175 ? 175 : val / 1.5,
         i * multiplier,
         brush
       );
