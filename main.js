@@ -3,7 +3,7 @@ const canvas = document.querySelector("canvas");
 canvas.height = innerHeight;
 canvas.width = innerWidth;
 const brush = canvas.getContext("2d");
-const radius = 200;
+const radius = 190;
 // const colors = {
 //   green: "#00916e",
 //   yellow: "#FFCF00",
@@ -84,12 +84,10 @@ const selectSong = () => {
       audioElement.src.indexOf("/", 7) + 1
     );
     if (i >= songs.length - 1) {
-      console.log("ding");
       audioElement.src = songs[0].src;
       playSong(songs[0].enum);
       return false;
     } else if (song.src === currentSrc) {
-      console.log("ding2");
       const arrIndex = +i + 1;
       const next = songs[arrIndex];
       playSong(next.enum);
@@ -117,11 +115,11 @@ const draw = (data) => {
   data = [...data];
   const space = canvas.width / 2 / data.length;
 
-  if (count % 50) {
+  if (count % 50 === 0) {
     const average = getAverage(data);
     if (average < 40) {
       selectedColor = colors.green;
-    } else if (average < 90) {
+    } else if (average < 95) {
       selectedColor = colors.yellow;
     } else {
       selectedColor = colors.red;
@@ -134,8 +132,8 @@ const draw = (data) => {
       const x = radius * Math.cos(degrees_to_radians(i * multiplier));
       const y = radius * Math.sin(degrees_to_radians(i * multiplier));
       drawCircle(
-        x + innerWidth / 2 + 33,
-        y + innerHeight / 2,
+        x + innerWidth / 2 + 30,
+        y + innerHeight / 2 + 5,
         2,
         val / 1.3 > 175 ? 175 : val / 1.3,
         i * multiplier,
@@ -184,7 +182,7 @@ const drawCircle = (x, y, w, h, deg, ctx) => {
   // }
   ctx.fillStyle = selectedColor;
   ctx.shadowColor = selectedColor;
-  ctx.shadowBlur = 20;
+  ctx.shadowBlur = 50;
   ctx.fillRect(-1 * (w / 2), -1 * (h / 2), w, h);
   ctx.restore();
 };
