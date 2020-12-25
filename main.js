@@ -3,7 +3,22 @@ const canvas = document.querySelector("canvas");
 canvas.height = innerHeight;
 canvas.width = innerWidth;
 const brush = canvas.getContext("2d");
-const radius = 186;
+
+let breakpoints = {
+  sml: canvas.width <= 320,
+  med: canvas.width <= 768,
+  large: canvas.width <= 1280,
+};
+
+const getBreakpoints = () => {
+  breakpoints = {
+    sml: canvas.width <= 320,
+    med: canvas.width <= 768,
+    large: canvas.width <= 1280,
+  };
+};
+
+let radius = breakpoints.sml ? 100 : 186;
 
 const colors = {
   green: "rgba(255,255,255, 0.5)",
@@ -109,7 +124,6 @@ let data = new Uint8Array(analyser.frequencyBinCount);
 const draw = (data) => {
   count++;
   data = [...data];
-  console.log(data);
   const space = canvas.width / 2 / data.length;
 
   if (count % 50 === 0) {
@@ -138,7 +152,7 @@ const draw = (data) => {
       );
     }
     // * Circles
-    if (i % 3 === 0) {
+    if (i % 3 === 0 && !breakpoints.sml) {
       for (let index = 0; index < val; index++) {
         if (index % 8 === 0) {
           const x = space * i + 20;
@@ -206,6 +220,8 @@ const animate = () => {
   if (canvas.width !== innerWidth || canvas.height !== innerHeight) {
     canvas.width = innerWidth;
     canvas.height = innerHeight;
+    getBreakpoints();
+    radius = breakpoints.sml ? 100 : 186;
   }
   requestAnimationFrame(animate);
   brush.clearRect(0, 0, canvas.width, canvas.height);
