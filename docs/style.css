@@ -1,0 +1,68 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #222;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+canvas {
+  /* background-image: url("assets/eye.jpg"); */
+  background-position: center;
+  background-size: cover;
+}
+
+.media-controls {
+  position: absolute;
+  right: 0;
+  width: 300px;
+  height: 100%;
+  padding: 10px 10px 0;
+}
+
+audio {
+  position: absolute;
+  right: 10px;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+}
+
+#track-list {
+  position: absolute;
+  background-color: #f1f3f4;
+  color: rgb(11, 11, 11);
+}
+
+#track-list > .heading {
+  padding: 10px;
+}
+
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+li {
+  padding: 5px 10px;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+/* li:nth-child(odd) {
+  background: rgba(0, 0, 0, 0.1);
+} */
+
+li:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+li.active {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+li span {
+  float: right;
+}

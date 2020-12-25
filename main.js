@@ -57,9 +57,11 @@ const songs = [
   },
 ];
 const audioElement = document.querySelector("audio");
+
+const audioEleMargin = 25;
 const audioContext = new AudioContext();
 const analyser = audioContext.createAnalyser();
-analyser.fftSize = 512;
+analyser.fftSize = 32;
 const source = audioContext.createMediaElementSource(audioElement);
 source.connect(analyser);
 //this connects our music back to the default output, such as your //speakers
@@ -73,7 +75,7 @@ const checkElement = async (selector) => {
 };
 
 const playSong = (name) => {
-  checkElement(`#${name}`).then((res) => {
+  checkElement(`#${name}`).then(() => {
     const currentTrack = document.getElementById(name);
     const activeTrack = document.getElementsByClassName("active");
     while (activeTrack.length > 0) {
@@ -83,21 +85,22 @@ const playSong = (name) => {
     songs.forEach((song) => {
       if (song.enum === name) audioElement.src = song.src;
     });
-    audioElement.play();
-    init();
+
+    audioElement.onloadeddata = function () {
+      audioElement.play();
+      init();
+    };
   });
 };
 
 const selectSong = () => {
   songs.every((song, i) => {
-    const currentSrc = audioElement.src.substr(
-      audioElement.src.indexOf("/", 7) + 1
-    );
+    const currentSrc = audioElement.src;
     if (i >= songs.length - 1) {
       audioElement.src = songs[0].src;
       playSong(songs[0].enum);
       return false;
-    } else if (song.src === currentSrc) {
+    } else if (currentSrc.includes(song.src)) {
       const arrIndex = +i + 1;
       const next = songs[arrIndex];
       playSong(next.enum);
@@ -121,58 +124,110 @@ const getAverage = (nums) => {
 let count = 0;
 let data = new Uint8Array(analyser.frequencyBinCount);
 
-const draw = (data) => {
-  count++;
-  data = [...data];
-  const space = canvas.width / 2 / data.length;
-
-  if (count % 50 === 0) {
-    const average = getAverage(data);
-    if (average < 40) {
-      selectedColor = colors.green;
-    } else if (average < 95) {
-      selectedColor = colors.yellow;
-    } else {
-      selectedColor = colors.red;
-    }
+class Circle {
+  constructor(radius, i) {
+    this.x = canvas.width / 2;
+    this.y = canvas.height / 2;
+    this.radius = radius;
+    this.i = i;
   }
 
-  data.forEach((val, i) => {
-    if (i % 1 === 0 && i > 20) {
-      multiplier = 4;
-      const x = radius * Math.cos(degrees_to_radians(i * multiplier));
-      const y = radius * Math.sin(degrees_to_radians(i * multiplier));
-      drawCircle(
-        x + innerWidth / 2 + 30,
-        y + innerHeight / 2 + 5,
-        2,
-        val / 1.5 > 175 ? 175 : val / 1.5,
-        i * multiplier,
-        brush
-      );
+  draw() {
+    brush.beginPath();
+    brush.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+
+    if (this.radius > 190) {
+      brush.strokeStyle = colors.red;
+    } else if (this.radius > 90) {
+      brush.strokeStyle = colors.yellow;
+    } else {
+      brush.strokeStyle = colors.green;
     }
-    // * Circles
-    if (i % 3 === 0 && !breakpoints.sml) {
-      for (let index = 0; index < val; index++) {
-        if (index % 8 === 0) {
-          const x = space * i + 20;
-          const y = canvas.height - index - 20;
+    brush.stroke();
+  }
+
+  drawBar() {
+    const audioRect = audioElement.getBoundingClientRect();
+    const space = (audioRect.width - audioEleMargin * 2) / data.length;
+    if (this.i % 1 === 0) {
+      for (let index = 0; index < this.radius / 3; index++) {
+        if (index % 1 === 0) {
+          const smlRadius = 1;
+          const x = space * this.i + audioRect.x + audioEleMargin + smlRadius;
+          const y = audioRect.y - index;
           brush.beginPath();
-          brush.arc(x, y, 1, 0, Math.PI * 2);
-          if (index > 190) {
-            brush.fillStyle = colorBars.high;
-          } else if (index > 90) {
-            brush.fillStyle = colorBars.mid;
+          brush.arc(x, y, smlRadius, 0, Math.PI * 2);
+          if (index > 60) {
+            brush.fillStyle = colors.red;
+          } else if (index > 30) {
+            brush.fillStyle = colors.yellow;
           } else {
-            brush.fillStyle = colorBars.low;
+            brush.fillStyle = colors.green;
           }
 
           brush.fill();
         }
       }
     }
-  });
-};
+  }
+
+  update() {
+    this.draw();
+    this.drawBar();
+  }
+}
+// const draw = (data) => {
+//   count++;
+//   data = [...data];
+//   const space = canvas.width / 2 / data.length;
+
+//   if (count % 50 === 0) {
+//     const average = getAverage(data);
+//     if (average < 40) {
+//       selectedColor = colors.green;
+//     } else if (average < 95) {
+//       selectedColor = colors.yellow;
+//     } else {
+//       selectedColor = colors.red;
+//     }
+//   }
+
+//   data.forEach((val, i) => {
+//     if (i % 1 === 0 && i > 20) {
+//       multiplier = 4;
+//       const x = radius * Math.cos(degrees_to_radians(i * multiplier));
+//       const y = radius * Math.sin(degrees_to_radians(i * multiplier));
+//       drawCircle(
+//         x + innerWidth / 2 + 30,
+//         y + innerHeight / 2 + 5,
+//         2,
+//         val / 1.5 > 175 ? 175 : val / 1.5,
+//         i * multiplier,
+//         brush
+//       );
+//     }
+//     // * Circles
+//     if (i % 3 === 0 && !breakpoints.sml) {
+//       for (let index = 0; index < val; index++) {
+//         if (index % 8 === 0) {
+//           const x = space * i + 20;
+//           const y = canvas.height - index - 20;
+//           brush.beginPath();
+//           brush.arc(x, y, 1, 0, Math.PI * 2);
+//           if (index > 190) {
+//             brush.fillStyle = colorBars.high;
+//           } else if (index > 90) {
+//             brush.fillStyle = colorBars.mid;
+//           } else {
+//             brush.fillStyle = colorBars.low;
+//           }
+
+//           brush.fill();
+//         }
+//       }
+//     }
+//   });
+// };
 
 const drawCircle = (x, y, w, h, deg, ctx) => {
   ctx.save();
@@ -216,20 +271,43 @@ const buildTracks = () => {
   });
 };
 
+const setPlaylistPos = () => {
+  const audioRect = audioElement.getBoundingClientRect();
+  const playlist = document.getElementById("track-list");
+  playlist.style.width = `${audioRect.width - audioEleMargin * 2}px`;
+  playlist.style.left = `${audioRect.x + audioEleMargin}px`;
+  playlist.style.top = `${audioRect.y + audioRect.height}px`;
+};
+
 const animate = () => {
   if (canvas.width !== innerWidth || canvas.height !== innerHeight) {
     canvas.width = innerWidth;
     canvas.height = innerHeight;
     getBreakpoints();
+    setPlaylistPos();
     radius = breakpoints.sml ? 100 : 186;
   }
   requestAnimationFrame(animate);
-  brush.clearRect(0, 0, canvas.width, canvas.height);
+  // brush.clearRect(0, 0, canvas.width, canvas.height);
+  brush.fillStyle = "rgba(34,34,34, 0.1)";
+  brush.fillRect(0, 0, canvas.width, canvas.height);
   analyser.getByteFrequencyData(data);
-  draw(data);
+  let circleArr = [];
+  let audioData = [...data];
+  audioData.forEach((val, i) => {
+    circleArr.push(new Circle(val, i));
+  });
+
+  circleArr.forEach((circle, i) => {
+    circle.update();
+  });
+
+  // draw(data);
 };
 
 const init = () => {
+  setPlaylistPos();
+
   if (!audioElement.src) {
     playSong(songs[0].enum);
   }
