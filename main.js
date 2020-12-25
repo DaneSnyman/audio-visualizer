@@ -97,10 +97,12 @@ const selectSong = () => {
       audioElement.src.indexOf("/", 7) + 1
     );
     if (i >= songs.length - 1) {
+      console.log("end of array, set to 0");
       audioElement.src = songs[0].src;
       playSong(songs[0].enum);
       return false;
     } else if (song.src === currentSrc) {
+      console.log("Song ended");
       const arrIndex = +i + 1;
       const next = songs[arrIndex];
       playSong(next.enum);
