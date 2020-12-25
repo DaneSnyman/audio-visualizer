@@ -4,11 +4,6 @@ canvas.height = innerHeight;
 canvas.width = innerWidth;
 const brush = canvas.getContext("2d");
 const radius = 186;
-// const colors = {
-//   green: "#00916e",
-//   yellow: "#FFCF00",
-//   red: "#fa003f",
-// };
 
 const colors = {
   green: "rgba(255,255,255, 0.5)",
@@ -110,9 +105,11 @@ const getAverage = (nums) => {
 };
 let count = 0;
 let data = new Uint8Array(analyser.frequencyBinCount);
+
 const draw = (data) => {
   count++;
   data = [...data];
+  console.log(data);
   const space = canvas.width / 2 / data.length;
 
   if (count % 50 === 0) {
@@ -167,19 +164,6 @@ const drawCircle = (x, y, w, h, deg, ctx) => {
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(degrees_to_radians(deg + 90));
-  // if (h > 170) {
-  //   ctx.fillStyle = colors.red;
-  //   ctx.shadowColor = colors.red;
-  //   ctx.shadowBlur = 20;
-  // } else if (h > 80) {
-  //   ctx.fillStyle = colors.yellow;
-  //   ctx.shadowColor = colors.yellow;
-  //   ctx.shadowBlur = 20;
-  // } else {
-  //   ctx.fillStyle = colors.green;
-  //   ctx.shadowColor = colors.green;
-  //   ctx.shadowBlur = 20;
-  // }
   ctx.fillStyle = selectedColor;
   ctx.shadowColor = selectedColor;
   ctx.shadowBlur = 50;
@@ -225,8 +209,6 @@ const animate = () => {
   }
   requestAnimationFrame(animate);
   brush.clearRect(0, 0, canvas.width, canvas.height);
-  // brush.fillStyle = "rgba(20, 20, 20, 0.5)";
-  // brush.fillRect(0, 0, canvas.width, canvas.height);
   analyser.getByteFrequencyData(data);
   draw(data);
 };
