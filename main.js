@@ -93,18 +93,12 @@ const playSong = (name) => {
 
 const selectSong = () => {
   songs.every((song, i) => {
-    const currentSrc = audioElement.src.substr(
-      audioElement.src.indexOf("/", 7) + 1
-    );
-    console.log("source", currentSrc);
-    console.log("i", i);
+    const currentSrc = audioElement.src;
     if (i >= songs.length - 1) {
-      console.log("end of array, set to 0");
       audioElement.src = songs[0].src;
       playSong(songs[0].enum);
       return false;
-    } else if (song.src === currentSrc) {
-      console.log("Song ended");
+    } else if (currentSrc.includes(song.src)) {
       const arrIndex = +i + 1;
       const next = songs[arrIndex];
       playSong(next.enum);
