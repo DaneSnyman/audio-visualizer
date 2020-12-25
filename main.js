@@ -83,8 +83,11 @@ const playSong = (name) => {
     songs.forEach((song) => {
       if (song.enum === name) audioElement.src = song.src;
     });
-    audioElement.play();
-    init();
+
+    audioElement.onloadeddata = function () {
+      audioElement.play();
+      init();
+    };
   });
 };
 
