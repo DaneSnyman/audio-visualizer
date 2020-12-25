@@ -96,6 +96,8 @@ const selectSong = () => {
     const currentSrc = audioElement.src.substr(
       audioElement.src.indexOf("/", 7) + 1
     );
+    console.log("source", currentSrc);
+    console.log("i", i);
     if (i >= songs.length - 1) {
       console.log("end of array, set to 0");
       audioElement.src = songs[0].src;
