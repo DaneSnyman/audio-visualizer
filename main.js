@@ -4,26 +4,34 @@ canvas.height = innerHeight;
 canvas.width = innerWidth;
 const brush = canvas.getContext("2d");
 
-let breakpoints = {
-  sml: canvas.width <= 320,
-  med: canvas.width <= 768,
-  large: canvas.width <= 1280,
-};
-
 const getBreakpoints = () => {
-  breakpoints = {
+  const breakpoints = {
     sml: canvas.width <= 320,
     med: canvas.width <= 768,
     large: canvas.width <= 1280,
   };
+  return breakpoints;
 };
 
+let breakpoints = getBreakpoints();
 let radius = breakpoints.sml ? 100 : 186;
 
+const hexToRGB = (hex, alpha) => {
+  var r = parseInt(hex.slice(1, 3), 16),
+    g = parseInt(hex.slice(3, 5), 16),
+    b = parseInt(hex.slice(5, 7), 16);
+
+  if (alpha) {
+    return "rgba(" + r + ", " + g + ", " + b + ", " + alpha + ")";
+  } else {
+    return "rgb(" + r + ", " + g + ", " + b + ")";
+  }
+};
+
 const colors = {
-  green: "rgba(255,255,255, 0.5)",
-  yellow: "rgba(255,207,0, 0.5)",
-  red: "rgba(156, 13, 56, 0.8)",
+  green: hexToRGB("#086972", 1),
+  yellow: hexToRGB("#17b978", 1),
+  red: hexToRGB("#a7ff83", 1),
 };
 
 const colorBars = {
@@ -31,6 +39,13 @@ const colorBars = {
   low: "#4370D6",
   mid: "#67B6E6",
   high: "#B6D3E1",
+};
+
+const effect = {
+  speaker: true,
+  lineCircle: false,
+  soundBar: true,
+  starField: false,
 };
 
 let selectedColor = colors.yellow;
@@ -60,12 +75,18 @@ const audioElement = document.querySelector("audio");
 
 const audioEleMargin = 25;
 const audioContext = new AudioContext();
-const analyser = audioContext.createAnalyser();
-analyser.fftSize = 32;
 const source = audioContext.createMediaElementSource(audioElement);
-source.connect(analyser);
-//this connects our music back to the default output, such as your //speakers
-source.connect(audioContext.destination);
+
+let analyser;
+const setFFTSize = (size) => {
+  analyser = audioContext.createAnalyser();
+  analyser.fftSize = size;
+  source.connect(analyser);
+  //this connects our music back to the default output, such as your //speakers
+  source.connect(audioContext.destination);
+  return new Uint8Array(analyser.frequencyBinCount);
+};
+let data = setFFTSize(32);
 
 const checkElement = async (selector) => {
   while (document.querySelector(selector) === null) {
@@ -122,28 +143,47 @@ const getAverage = (nums) => {
   return nums.reduce((a, b) => a + b) / nums.length;
 };
 let count = 0;
-let data = new Uint8Array(analyser.frequencyBinCount);
 
 class Circle {
   constructor(radius, i) {
     this.x = canvas.width / 2;
     this.y = canvas.height / 2;
+    this.starX = 1;
+    this.starY = Math.random() * canvas.height;
     this.radius = radius;
     this.i = i;
+    this.color = this.setColor();
+    this.increment = 0;
   }
 
-  draw() {
+  drawSpeakerWaves() {
     brush.beginPath();
     brush.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-
-    if (this.radius > 190) {
-      brush.strokeStyle = colors.red;
-    } else if (this.radius > 90) {
-      brush.strokeStyle = colors.yellow;
-    } else {
-      brush.strokeStyle = colors.green;
-    }
+    // brush.shadowColor = this.color;
+    // brush.shadowBlur = 1;
+    // brush.fillStyle = this.color;
+    // brush.fill();
+    brush.lineWidth = this.radius / 15;
+    brush.strokeStyle = this.color;
     brush.stroke();
+  }
+
+  setColor() {
+    if (this.radius > 190) {
+      return colors.red;
+    } else if (this.radius > 90) {
+      return colors.yellow;
+    } else {
+      return colors.green;
+    }
+  }
+
+  drawStarField() {
+    this.starX += this.radius;
+    brush.beginPath();
+    brush.arc(this.starX, this.starY, 5, 0, Math.PI * 2);
+    brush.fillStyle = colors.green;
+    brush.fill();
   }
 
   drawBar() {
@@ -171,63 +211,44 @@ class Circle {
     }
   }
 
+  drawCircleWave() {
+    const multiplier = 4;
+    const x = radius * Math.cos(degrees_to_radians(this.i * multiplier));
+    const y = radius * Math.sin(degrees_to_radians(this.i * multiplier));
+    this.lineCircle(
+      x + innerWidth / 2 + 30,
+      y + innerHeight / 2 + 5,
+      2,
+      this.radius / 1.5 > 175 ? 175 : this.radius / 1.5,
+      this.i * multiplier,
+      brush
+    );
+  }
+
+  lineCircle(x, y, w, h, deg, ctx) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(degrees_to_radians(deg + 90));
+    ctx.fillStyle = selectedColor;
+    ctx.shadowColor = selectedColor;
+    ctx.shadowBlur = 50;
+    ctx.fillRect(-1 * (w / 2), -1 * (h / 2), w, h);
+    ctx.restore();
+  }
+
   update() {
-    this.draw();
-    this.drawBar();
+    if (effect.speaker && this.i % 2 === 0 && this.i > 5)
+      this.drawSpeakerWaves();
+    if (effect.lineCircle && this.i % 1 === 0 && this.i > 20)
+      this.drawCircleWave();
+    if (effect.soundBar && this.i % 1 === 0) this.drawBar();
+    if (effect.starField && this.i % 1 === 0) {
+      this.starX += this.i;
+      console.log(this.starX);
+      this.drawStarField();
+    }
   }
 }
-// const draw = (data) => {
-//   count++;
-//   data = [...data];
-//   const space = canvas.width / 2 / data.length;
-
-//   if (count % 50 === 0) {
-//     const average = getAverage(data);
-//     if (average < 40) {
-//       selectedColor = colors.green;
-//     } else if (average < 95) {
-//       selectedColor = colors.yellow;
-//     } else {
-//       selectedColor = colors.red;
-//     }
-//   }
-
-//   data.forEach((val, i) => {
-//     if (i % 1 === 0 && i > 20) {
-//       multiplier = 4;
-//       const x = radius * Math.cos(degrees_to_radians(i * multiplier));
-//       const y = radius * Math.sin(degrees_to_radians(i * multiplier));
-//       drawCircle(
-//         x + innerWidth / 2 + 30,
-//         y + innerHeight / 2 + 5,
-//         2,
-//         val / 1.5 > 175 ? 175 : val / 1.5,
-//         i * multiplier,
-//         brush
-//       );
-//     }
-//     // * Circles
-//     if (i % 3 === 0 && !breakpoints.sml) {
-//       for (let index = 0; index < val; index++) {
-//         if (index % 8 === 0) {
-//           const x = space * i + 20;
-//           const y = canvas.height - index - 20;
-//           brush.beginPath();
-//           brush.arc(x, y, 1, 0, Math.PI * 2);
-//           if (index > 190) {
-//             brush.fillStyle = colorBars.high;
-//           } else if (index > 90) {
-//             brush.fillStyle = colorBars.mid;
-//           } else {
-//             brush.fillStyle = colorBars.low;
-//           }
-
-//           brush.fill();
-//         }
-//       }
-//     }
-//   });
-// };
 
 const drawCircle = (x, y, w, h, deg, ctx) => {
   ctx.save();
@@ -288,21 +309,18 @@ const animate = () => {
     radius = breakpoints.sml ? 100 : 186;
   }
   requestAnimationFrame(animate);
-  // brush.clearRect(0, 0, canvas.width, canvas.height);
-  brush.fillStyle = "rgba(34,34,34, 0.1)";
+  brush.fillStyle = hexToRGB("#111122", 0.3);
   brush.fillRect(0, 0, canvas.width, canvas.height);
   analyser.getByteFrequencyData(data);
   let circleArr = [];
   let audioData = [...data];
   audioData.forEach((val, i) => {
-    circleArr.push(new Circle(val, i));
+    if (i % 1 === 0) circleArr.push(new Circle(val, i));
   });
 
   circleArr.forEach((circle, i) => {
     circle.update();
   });
-
-  // draw(data);
 };
 
 const init = () => {
