@@ -4,9 +4,11 @@ canvas.height = innerHeight;
 canvas.width = innerWidth;
 const brush = canvas.getContext("2d");
 
+let isPortrait = canvas.height > canvas.width;
+
 const getBreakpoints = () => {
   const breakpoints = {
-    sml: canvas.width <= 320,
+    sml: canvas.width <= 500,
     med: canvas.width <= 768,
     large: canvas.width <= 1280,
   };
@@ -349,7 +351,7 @@ const buildTracks = () => {
 
 const setPlaylistPos = () => {
   const playlist = document.getElementById("track-list");
-  if (breakpoints.sml) {
+  if (breakpoints.sml && isPortrait) {
     playlist.style.width = `${canvas.width - 20}px`;
     playlist.style.left = `0px`;
     playlist.style.right = `0px`;
@@ -367,7 +369,8 @@ const animate = () => {
   if (canvas.width !== innerWidth || canvas.height !== innerHeight) {
     canvas.width = innerWidth;
     canvas.height = innerHeight;
-    getBreakpoints();
+    isPortrait = canvas.height > canvas.width;
+    breakpoints = getBreakpoints();
     setPlaylistPos();
     radius = breakpoints.sml ? 100 : 186;
   }
