@@ -15,6 +15,7 @@ const getBreakpoints = () => {
 
 let breakpoints = getBreakpoints();
 let radius = breakpoints.sml ? 100 : 186;
+console.log(breakpoints);
 
 const hexToRGB = (hex, alpha) => {
   var r = parseInt(hex.slice(1, 3), 16),
@@ -86,7 +87,7 @@ const setFFTSize = (size) => {
   source.connect(audioContext.destination);
   return new Uint8Array(analyser.frequencyBinCount);
 };
-let data = setFFTSize(32);
+let data = setFFTSize(64);
 
 const checkElement = async (selector) => {
   while (document.querySelector(selector) === null) {
@@ -145,7 +146,7 @@ const getAverage = (nums) => {
 let count = 0;
 
 class Circle {
-  constructor(radius, i) {
+  constructor(radius, i, audioData) {
     this.x = canvas.width / 2;
     this.y = canvas.height / 2;
     this.starX = 1;
@@ -154,18 +155,27 @@ class Circle {
     this.i = i;
     this.color = this.setColor();
     this.increment = 0;
+    this.audioData = audioData;
   }
 
   drawSpeakerWaves() {
-    brush.beginPath();
-    brush.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-    // brush.shadowColor = this.color;
-    // brush.shadowBlur = 1;
-    // brush.fillStyle = this.color;
-    // brush.fill();
-    brush.lineWidth = this.radius / 15;
-    brush.strokeStyle = this.color;
-    brush.stroke();
+    if (!this.audioData) {
+      brush.beginPath();
+      brush.arc(
+        this.x,
+        this.y,
+        breakpoints.sml ? this.radius / 3 : this.radius / 1.5,
+        0,
+        Math.PI * 2
+      );
+      // brush.shadowColor = this.color;
+      // brush.shadowBlur = 1;
+      // brush.fillStyle = this.color;
+      // brush.fill();
+      brush.lineWidth = this.radius / 25;
+      brush.strokeStyle = this.color;
+      brush.stroke();
+    }
   }
 
   setColor() {
@@ -179,33 +189,77 @@ class Circle {
   }
 
   drawStarField() {
-    this.starX += this.radius;
-    brush.beginPath();
-    brush.arc(this.starX, this.starY, 5, 0, Math.PI * 2);
-    brush.fillStyle = colors.green;
-    brush.fill();
+    if (!this.audioData) {
+      this.starX += this.radius;
+      brush.beginPath();
+      brush.arc(this.starX, this.starY, 5, 0, Math.PI * 2);
+      brush.fillStyle = colors.green;
+      brush.fill();
+    }
+  }
+
+  drawSpikes() {
+    if (this.audioData) {
+      const ctx = brush;
+      var totalLength = 0;
+
+      let cap = getAverage(this.audioData);
+      cap = breakpoints.sml ? cap / 2 : cap;
+      let numBurst = [];
+      this.audioData.forEach((freq) => {
+        if (breakpoints.sml) {
+          freq > 30
+            ? numBurst.push(freq / 2 + cap)
+            : numBurst.push(freq / 2 + 30 + cap);
+        } else {
+          freq > 30
+            ? numBurst.push(freq + cap)
+            : numBurst.push(freq + 30 + cap);
+        }
+      });
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height); //clear before every repaint
+      var angleInRad = (Math.PI * (360 / numBurst.length)) / 180;
+      var deltaAngleInRad = angleInRad / 2;
+      const varX = this.x;
+      const varY = this.y;
+      ctx.moveTo(varX, varY);
+      ctx.beginPath();
+      numBurst.forEach((freq, i) => {
+        const x1 = freq * Math.cos(angleInRad * i) + varX;
+        const y1 = freq * Math.sin(angleInRad * i) + varY;
+        const x2 = cap * Math.cos(angleInRad * i + deltaAngleInRad) + varX;
+        const y2 = cap * Math.sin(angleInRad * i + deltaAngleInRad) + varY;
+        ctx.lineTo(x1, y1);
+        ctx.lineTo(x2, y2);
+      });
+      ctx.fillStyle = "crimson";
+      ctx.fill();
+    }
   }
 
   drawBar() {
-    const audioRect = audioElement.getBoundingClientRect();
-    const space = (audioRect.width - audioEleMargin * 2) / data.length;
-    if (this.i % 1 === 0) {
-      for (let index = 0; index < this.radius / 3; index++) {
-        if (index % 1 === 0) {
-          const smlRadius = 1;
-          const x = space * this.i + audioRect.x + audioEleMargin + smlRadius;
-          const y = audioRect.y - index;
-          brush.beginPath();
-          brush.arc(x, y, smlRadius, 0, Math.PI * 2);
-          if (index > 60) {
-            brush.fillStyle = colors.red;
-          } else if (index > 30) {
-            brush.fillStyle = colors.yellow;
-          } else {
-            brush.fillStyle = colors.green;
-          }
+    if (!this.audioData) {
+      const audioRect = audioElement.getBoundingClientRect();
+      const space = (audioRect.width - audioEleMargin * 2) / data.length;
+      if (this.i % 1 === 0) {
+        for (let index = 0; index < this.radius / 3; index++) {
+          if (index % 1 === 0) {
+            const smlRadius = 1;
+            const x = space * this.i + audioRect.x + audioEleMargin + smlRadius;
+            const y = audioRect.y - index;
+            brush.beginPath();
+            brush.arc(x, y, smlRadius, 0, Math.PI * 2);
+            if (index > 60) {
+              brush.fillStyle = colors.red;
+            } else if (index > 30) {
+              brush.fillStyle = colors.yellow;
+            } else {
+              brush.fillStyle = colors.green;
+            }
 
-          brush.fill();
+            brush.fill();
+          }
         }
       }
     }
@@ -237,6 +291,7 @@ class Circle {
   }
 
   update() {
+    this.drawSpikes();
     if (effect.speaker && this.i % 2 === 0 && this.i > 5)
       this.drawSpeakerWaves();
     if (effect.lineCircle && this.i % 1 === 0 && this.i > 20)
@@ -293,11 +348,19 @@ const buildTracks = () => {
 };
 
 const setPlaylistPos = () => {
-  const audioRect = audioElement.getBoundingClientRect();
   const playlist = document.getElementById("track-list");
-  playlist.style.width = `${audioRect.width - audioEleMargin * 2}px`;
-  playlist.style.left = `${audioRect.x + audioEleMargin}px`;
-  playlist.style.top = `${audioRect.y + audioRect.height}px`;
+  if (breakpoints.sml) {
+    playlist.style.width = `${canvas.width - 20}px`;
+    playlist.style.left = `0px`;
+    playlist.style.right = `0px`;
+    playlist.style.top = `10px`;
+    playlist.style.margin = `auto`;
+  } else {
+    const audioRect = audioElement.getBoundingClientRect();
+    playlist.style.width = `${audioRect.width - audioEleMargin * 2}px`;
+    playlist.style.left = `${audioRect.x + audioEleMargin}px`;
+    playlist.style.top = `${audioRect.y + audioRect.height}px`;
+  }
 };
 
 const animate = () => {
@@ -309,11 +372,13 @@ const animate = () => {
     radius = breakpoints.sml ? 100 : 186;
   }
   requestAnimationFrame(animate);
-  brush.fillStyle = hexToRGB("#111122", 0.3);
-  brush.fillRect(0, 0, canvas.width, canvas.height);
+  // brush.fillStyle = hexToRGB("#111122", 0.3);
+  // brush.fillRect(0, 0, canvas.width, canvas.height);
+  brush.clearRect(0, 0, canvas.width, canvas.height);
   analyser.getByteFrequencyData(data);
   let circleArr = [];
   let audioData = [...data];
+  circleArr.push(new Circle(100, 0, audioData));
   audioData.forEach((val, i) => {
     if (i % 1 === 0) circleArr.push(new Circle(val, i));
   });

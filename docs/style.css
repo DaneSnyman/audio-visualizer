@@ -6,12 +6,12 @@ body {
   background-color: #071a52;
   font-family: Arial, Helvetica, sans-serif;
 }
-
+/* 
 canvas {
-  /* background-image: url("assets/eye.jpg"); */
+  background-image: url("https://res.cloudinary.com/rsc/image/upload/F0512764-01");
   background-position: center;
   background-size: cover;
-}
+} */
 
 .media-controls {
   position: absolute;
@@ -22,11 +22,20 @@ canvas {
 }
 
 audio {
-  position: absolute;
-  right: 10px;
-  top: 0;
-  bottom: 0;
+  position: fixed;
+  bottom: 10px;
+  left: 0;
+  right: 0;
   margin: auto;
+}
+@media screen and (min-width: 321px) {
+  audio {
+    position: absolute;
+    right: 10px;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+  }
 }
 
 #track-list {
